@@ -52,13 +52,15 @@ $result = $conn->query($sql);
 </head>
 
 <body>
+<body>
 
-<h1>Kias Villa Guest Manager</h1>
+<?php include("header.php"); ?>
 
 <a class="button" href="add_guest.php">Add New Guest</a>
 
 <table>
     <tr>
+        <th>Photo</th>
         <th>Name</th>
         <th>Email</th>
         <th>Phone</th>
@@ -68,6 +70,15 @@ $result = $conn->query($sql);
 
     <?php while ($guest = $result->fetch_assoc()) { ?>
         <tr>
+            <td>
+                <?php if (!empty($guest["image"])) { ?>
+                    <img src="images/<?php echo htmlspecialchars($guest["image"]); ?>"
+                         width="80"
+                         alt="Guest Photo">
+                <?php } ?>
+</td>
+
+
             <td>
                 <?php echo $guest["first_name"] . " " . $guest["last_name"]; ?>
             </td>
@@ -87,6 +98,7 @@ $result = $conn->query($sql);
     <?php } ?>
 
 </table>
+<?php include("footer.php"); ?>
 
 </body>
 </html>

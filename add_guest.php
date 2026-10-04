@@ -9,8 +9,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone = $_POST["phone"];
     $notes = $_POST["notes"];
 
-    $sql = "INSERT INTO guests (first_name, last_name, email, phone, notes)
-            VALUES ('$first_name', '$last_name', '$email', '$phone', '$notes')";
+    $image = null;
+
+    if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
+
+        $original_name = basename($_FILES["image"]["name"]);
+        $image = time() . "_" . $original_name;
+
+        $upload_path = __DIR__ . "/images/" . $image;
+
+        move_uploaded_file($_FILES["image"]["tmp_name"], $upload_path);
+    }
+
+    $sql = "INSERT INTO guests
+            (first_name, last_name, email, phone, notes, image)
+            VALUES
+            ('$first_name', '$last_name', '$email', '$phone', '$notes', '$image')";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: index.php");
@@ -19,6 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "Error: " . $conn->error;
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -67,12 +82,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     </style>
 </head>
-
+   
 <body>
+    <?php include("header.php"); ?>
 
-<h1>Add New Guest</h1>
+<h2>Add New Guest</h2>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 
     <label>First Name</label>
     <input type="text" name="first_name" required>
@@ -89,6 +105,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <label>Notes</label>
     <textarea name="notes"></textarea>
 
+    <label>Upload Image</label>
+    <input type="file" name="image" accept=".jpg,.jpeg,.png,.gif">
+
     <button type="submit">Add Guest</button>
 
 </form>
@@ -96,4 +115,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <p><a href="index.php">Back to Guest List</a></p>
 
 </body>
+ <?php include("footer.php"); ?>
 </html>

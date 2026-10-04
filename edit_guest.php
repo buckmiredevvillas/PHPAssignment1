@@ -94,8 +94,9 @@ if (!$guest) {
 </head>
 
 <body>
+    <?php include("header.php"); ?>
 
-<h1>Edit Guest</h1>
+<h2>Edit Guest</h2>
 
 <form method="POST">
 
@@ -135,4 +136,5 @@ if (!$guest) {
 <p><a href="index.php">Back to Guest List</a></p>
 
 </body>
+<?php include("footer.php"); ?>
 </html>

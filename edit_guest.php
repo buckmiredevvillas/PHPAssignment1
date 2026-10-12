@@ -1,6 +1,8 @@
 <?php
 require "database.php";
 
+require_once"image_util.php";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $id = intval($_POST["id"]);
@@ -10,19 +12,94 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone = $_POST["phone"];
     $notes = $_POST["notes"];
 
+    // Get current guest record
+    $stmt = $conn->prepare("SELECT * FROM guests WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $current_guest = $result->fetch_assoc();
+
+    $old_image_name = $current_guest["image"];
+    $image_name = $old_image_name;
+    $base_dir = "images/";
+
+    // If a new image was selected
+    if (
+        isset($_FILES["image"]) &&
+        $_FILES["image"]["error"] == UPLOAD_ERR_OK
+    ) {
+
+        $original_filename = basename($_FILES["image"]["name"]);
+        $upload_path = $base_dir . $original_filename;
+
+        move_uploaded_file(
+            $_FILES["image"]["tmp_name"],
+            $upload_path
+        );
+
+        // Create _100 and _400 images
+        process_image($base_dir, $original_filename);
+
+        // Save the _100 filename in database
+        $dot_pos = strrpos($original_filename, ".");
+
+        $image_name =
+            substr($original_filename, 0, $dot_pos)
+            . "_100"
+            . substr($original_filename, $dot_pos);
+
+        // Delete old image files if they use Assignment 3 naming
+        if (!empty($old_image_name) && strpos($old_image_name, "_100") !== false) {
+
+            $old_base = substr(
+                $old_image_name,
+                0,
+                strrpos($old_image_name, "_100")
+            );
+
+            $old_ext = substr(
+                $old_image_name,
+                strrpos($old_image_name, ".")
+            );
+
+            $old_files = [
+                $old_base . $old_ext,
+                $old_base . "_100" . $old_ext,
+                $old_base . "_400" . $old_ext
+            ];
+
+            foreach ($old_files as $file) {
+
+                $path = $base_dir . $file;
+
+                if (file_exists($path)) {
+                    unlink($path);
+                }
+            }
+        }
+    }
+
+    // Update guest
     $stmt = $conn->prepare(
         "UPDATE guests
-         SET first_name = ?, last_name = ?, email = ?, phone = ?, notes = ?
+         SET first_name = ?,
+             last_name = ?,
+             email = ?,
+             phone = ?,
+             notes = ?,
+             image = ?
          WHERE id = ?"
     );
 
     $stmt->bind_param(
-        "sssssi",
+        "ssssssi",
         $first_name,
         $last_name,
         $email,
         $phone,
         $notes,
+        $image_name,
         $id
     );
 
@@ -31,7 +108,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: index.php");
     exit;
 }
-
 $id = isset($_GET["id"]) ? intval($_GET["id"]) : 0;
 
 $stmt = $conn->prepare("SELECT * FROM guests WHERE id = ?");
@@ -98,7 +174,7 @@ if (!$guest) {
 
 <h2>Edit Guest</h2>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 
     <input type="hidden"
            name="id"
@@ -128,13 +204,47 @@ if (!$guest) {
 
     <label>Notes</label>
     <textarea name="notes"><?php echo htmlspecialchars($guest["notes"]); ?></textarea>
+    <?php if (!empty($guest["image"])) { ?>
+
+    <label>Current Image</label>
+
+    <img
+        id="imagePreview"
+        src="images/<?php echo htmlspecialchars($guest["image"]); ?>"
+        alt="<?php echo htmlspecialchars($guest["first_name"] . " " . $guest["last_name"]); ?>"
+        height="100"
+    >
+
+<?php } ?>
+
+<label>Update Image</label>
+
+<input
+    type="file"
+    name="image"
+    id="image"
+    accept="image/*"
+>
 
     <button type="submit">Update Guest</button>
 
 </form>
 
 <p><a href="index.php">Back to Guest List</a></p>
+<script>
+const fileInput = document.getElementById("image");
+const imagePreview = document.getElementById("imagePreview");
 
+fileInput.addEventListener("change", function () {
+
+    const file = this.files[0];
+
+    if (file && imagePreview) {
+        const imageURL = URL.createObjectURL(file);
+        imagePreview.src = imageURL;
+    }
+});
+</script>
 </body>
 <?php include("footer.php"); ?>
 </html>

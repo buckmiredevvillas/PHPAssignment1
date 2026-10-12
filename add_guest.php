@@ -1,6 +1,10 @@
 <?php
 require "database.php";
 
+require_once"image_util.php";
+
+    
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $first_name = $_POST["first_name"];
@@ -11,15 +15,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $image = null;
 
-    if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
+    $image = null;
+$base_dir = "images/";
 
-        $original_name = basename($_FILES["image"]["name"]);
-        $image = time() . "_" . $original_name;
+if (isset($_FILES["image"]) && $_FILES["image"]["error"] == UPLOAD_ERR_OK) {
 
-        $upload_path = __DIR__ . "/images/" . $image;
+    $original_filename = basename($_FILES["image"]["name"]);
+    $upload_path = $base_dir . $original_filename;
 
-        move_uploaded_file($_FILES["image"]["tmp_name"], $upload_path);
-    }
+    move_uploaded_file(
+        $_FILES["image"]["tmp_name"],
+        $upload_path
+    );
+
+    process_image($base_dir, $original_filename);
+
+    // save _100 version in database
+    $dot_pos = strpos($original_filename, ".");
+
+    $image = substr($original_filename, 0, $dot_pos)
+           . "_100"
+           . substr($original_filename, $dot_pos);
+}
 
     $sql = "INSERT INTO guests
             (first_name, last_name, email, phone, notes, image)
@@ -103,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <input type="text" name="phone">
 
     <label>Notes</label>
-    <textarea name="notes"></textarea>
+    <textarea name="notes" id="notes"></textarea>
 
     <label>Upload Image</label>
     <input type="file" name="image" accept=".jpg,.jpeg,.png,.gif">
@@ -113,7 +130,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </form>
 
 <p><a href="index.php">Back to Guest List</a></p>
-
+<script>
+document.getElementById("notes").value = "";
+</script>
 </body>
  <?php include("footer.php"); ?>
 </html>

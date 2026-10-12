@@ -90,9 +90,9 @@ $result = $conn->query($sql);
             <td><?php echo $guest["notes"]; ?></td>
 
             <td>
-                <a href="edit_guest.php?id=<?php echo $guest["id"]; ?>">Edit</a>
-                |
-                <a href="delete_guest.php?id=<?php echo $guest["id"]; ?>">Delete</a>
+                 <a href="guest_details.php?id=<?php echo $guest["id"]; ?>">View Details</a> |
+<a href="edit_guest.php?id=<?php echo $guest["id"]; ?>">Edit</a> |
+<a href="delete_guest.php?id=<?php echo $guest["id"]; ?>">Delete</a>
             </td>
         </tr>
     <?php } ?>
@@ -101,4 +101,4 @@ $result = $conn->query($sql);
 <?php include("footer.php"); ?>
 
 </body>
-</html>
+</html><a

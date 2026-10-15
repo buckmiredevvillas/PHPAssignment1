@@ -1,4 +1,11 @@
 <?php
+session_start();
+
+if (!isset($_SESSION["user_id"])) {
+    header("Location: login.php");
+    exit;
+}
+
 require "database.php";
 
 $sql = "SELECT * FROM guests ORDER BY id DESC";
@@ -51,10 +58,15 @@ $result = $conn->query($sql);
     </style>
 </head>
 
-<body>
+
 <body>
 
 <?php include("header.php"); ?>
+<p>
+    Welcome, <?php echo htmlspecialchars($_SESSION["first_name"]); ?> |
+    <a href="logout.php">Logout</a>
+</p>
+
 
 <a class="button" href="add_guest.php">Add New Guest</a>
 
@@ -101,4 +113,4 @@ $result = $conn->query($sql);
 <?php include("footer.php"); ?>
 
 </body>
-</html><a
+</html>

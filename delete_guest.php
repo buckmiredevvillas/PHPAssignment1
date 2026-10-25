@@ -1,4 +1,14 @@
+
 <?php
+session_start();
+
+if (!isset($_SESSION["user_id"])) {
+    header("Location: login.php");
+    exit;
+}
+
+$user_id = $_SESSION["user_id"];
+
 require "database.php";
 
 $id = isset($_GET["id"]) ? intval($_GET["id"]) : 0;
@@ -7,16 +17,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $id = intval($_POST["id"]);
 
-    $stmt = $conn->prepare("DELETE FROM guests WHERE id = ?");
-    $stmt->bind_param("i", $id);
+    $stmt = $conn->prepare(
+        "DELETE FROM guests WHERE id = ? AND user_id = ?"
+    );
+    $stmt->bind_param("ii", $id, $user_id);
     $stmt->execute();
 
     header("Location: index.php");
     exit;
 }
 
-$stmt = $conn->prepare("SELECT * FROM guests WHERE id = ?");
-$stmt->bind_param("i", $id);
+$stmt = $conn->prepare(
+    "SELECT * FROM guests WHERE id = ? AND user_id = ?"
+);
+$stmt->bind_param("ii", $id, $user_id);
 $stmt->execute();
 
 $result = $stmt->get_result();
@@ -26,7 +40,6 @@ if (!$guest) {
     die("Guest not found.");
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 

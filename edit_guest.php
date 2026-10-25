@@ -1,8 +1,18 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+session_start();
+
+if (!isset($_SESSION["user_id"])) {
+    header("Location: login.php");
+    exit;
+}
+
+$user_id = $_SESSION["user_id"];
+
 require "database.php";
-
-require_once"image_util.php";
-
+require_once "image_util.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $id = intval($_POST["id"]);
@@ -13,12 +23,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $notes = $_POST["notes"];
 
     // Get current guest record
-    $stmt = $conn->prepare("SELECT * FROM guests WHERE id = ?");
-    $stmt->bind_param("i", $id);
+    $stmt = $conn->prepare(
+    "SELECT * FROM guests WHERE id = ? AND user_id = ?"
+);
+$stmt->bind_param("ii", $id, $user_id);
+    
     $stmt->execute();
 
     $result = $stmt->get_result();
     $current_guest = $result->fetch_assoc();
+    if (!$current_guest) {
+    die("Guest not found or access denied.");
+}
 
     $old_image_name = $current_guest["image"];
     $image_name = $old_image_name;
@@ -89,18 +105,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
              phone = ?,
              notes = ?,
              image = ?
-         WHERE id = ?"
+          WHERE id = ? AND user_id = ?"
     );
 
     $stmt->bind_param(
-        "ssssssi",
+        "ssssssii",
         $first_name,
         $last_name,
         $email,
         $phone,
         $notes,
         $image_name,
-        $id
+        $id,
+        $user_id
     );
 
     $stmt->execute();
@@ -110,8 +127,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 $id = isset($_GET["id"]) ? intval($_GET["id"]) : 0;
 
-$stmt = $conn->prepare("SELECT * FROM guests WHERE id = ?");
-$stmt->bind_param("i", $id);
+$stmt = $conn->prepare(
+    "SELECT * FROM guests WHERE id = ? AND user_id = ?"
+);
+$stmt->bind_param("ii", $id, $user_id);
 $stmt->execute();
 
 $result = $stmt->get_result();

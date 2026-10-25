@@ -8,8 +8,16 @@ if (!isset($_SESSION["user_id"])) {
 
 require "database.php";
 
-$sql = "SELECT * FROM guests ORDER BY id DESC";
-$result = $conn->query($sql);
+$user_id = $_SESSION["user_id"];
+
+$stmt = $conn->prepare(
+    "SELECT * FROM guests WHERE user_id = ? ORDER BY id DESC"
+);
+
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+
+$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>

@@ -1,4 +1,14 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+session_start();
+
+if (!isset($_SESSION["user_id"])) {
+    header("Location: login.php");
+    exit;
+}
+
 require "database.php";
 
 require_once"image_util.php";
@@ -37,11 +47,11 @@ if (isset($_FILES["image"]) && $_FILES["image"]["error"] == UPLOAD_ERR_OK) {
            . "_100"
            . substr($original_filename, $dot_pos);
 }
-
+    $user_id = $_SESSION["user_id"];
     $sql = "INSERT INTO guests
-            (first_name, last_name, email, phone, notes, image)
+            (first_name, last_name, email, phone, notes, image, user_id)
             VALUES
-            ('$first_name', '$last_name', '$email', '$phone', '$notes', '$image')";
+            ('$first_name', '$last_name', '$email', '$phone', '$notes', '$image', $user_id)";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: index.php");
